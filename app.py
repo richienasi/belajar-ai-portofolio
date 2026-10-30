@@ -47,7 +47,8 @@ except Exception as e:
     st.stop()
 
 # 3. Fitur Unggah Gambar Oleh Pengguna / Perekrut Kerja
-uploaded_file = st.file_uploader("Pilih gambar mata (Format: JPG, JPEG, PNG)...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Pilih gambar mata (Format: JPG, JPEG, PNG, AVIF)...", type=["jpg", "jpeg", "png", "avif"])
+
 
 if uploaded_file is not None:
     # Menampilkan gambar ke layar web
