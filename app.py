@@ -56,17 +56,18 @@ if uploaded_file is not None:
     img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)
     
-    # 5. Eksekusi Prediksi Langsung & Normalisasi Softmax Mandiri
+        # 5. Eksekusi Prediksi Langsung & Normalisasi Softmax Mandiri
     predictions = model.predict(img_array)
-    raw_scores = predictions[0] # Ambil baris pertama dari batch
+    raw_scores = predictions.flatten() # Memaksa hasil prediksi menjadi array 1 dimensi datar
     
-    # Menggunakan fungsi Softmax manual berbasis NumPy yang stabil dari error pembagian nol
+    # Fungsi Softmax manual yang sangat aman dari error matematika
     exp_scores = np.exp(raw_scores - np.max(raw_scores))
     probabilities = exp_scores / np.sum(exp_scores)
     
     highest_class_idx = np.argmax(probabilities)
     result_disease = CLASS_NAMES[highest_class_idx]
     confidence_pct = 100 * probabilities[highest_class_idx]
+
     
     # 6. Menampilkan Hasil Utama Analisis AI
     st.success(f"**Hasil Diagnosis AI:** Terdeteksi indikasi klinis **{result_disease}**")
