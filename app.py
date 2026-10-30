@@ -8,37 +8,24 @@ st.set_page_config(page_title="Sistem Deteksi Penyakit Mata AI", layout="centere
 st.title("👁️ Sistem Analisis Medis & Klasifikasi Penyakit Mata")
 st.write("Unggah foto klinis mata untuk melakukan deteksi otomatis berbasis Deep Learning.")
 
-# 2. Membangun Ulang Arsitektur Model secara Aman Langsung di Cloud
+# 2. Memuat Model Asli Secara Sempurna dengan Custom Objects
 @st.cache_resource
-def build_and_load_model():
+def load_final_model():
     model_file = "model_penyakit_mata_final.h5"
     
-    base_model = tf.keras.applications.MobileNetV2(
-        input_shape=(224, 224, 3),
-        include_top=False,
-        weights=None
-    )
+    # Daftarkan fungsi pemrosesan bawaan Google yang ikut tersimpan di dalam file .h5
+    custom_objects = {
+        'preprocess_input': tf.keras.applications.mobilenet_v2.preprocess_input
+    }
     
-    inputs = tf.keras.Input(shape=(224, 224, 3))
-    x = base_model(inputs, training=False)
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.keras.layers.Dropout(0.3)(x)
-    outputs = tf.keras.layers.Dense(5)(x) # Menggunakan output mentah (logits)
-    
-    stable_model = tf.keras.Model(inputs, outputs)
-    
-    try:
-        stable_model.load_weights(model_file, by_name=True, skip_mismatch=True)
-    except Exception:
-        stable_model = tf.keras.models.load_model(model_file, compile=False)
-        
-    return stable_model
+    # Memuat model asli secara utuh tanpa membongkar arsitekturnya
+    return tf.keras.models.load_model(model_file, custom_objects=custom_objects, compile=False)
 
 try:
-    model = build_and_load_model()
+    model = load_final_model()
     CLASS_NAMES = ['Cataracts', 'Uveitis', 'Crossed Eyes', 'Bulging Eyes', 'Glaucoma']
 except Exception as e:
-    st.error(f"Gagal memuat sistem AI: {e}")
+    st.error(f"Gagal memuat sistem AI. Log Error: {e}")
     st.stop()
 
 # 3. Fitur Unggah Gambar
@@ -50,35 +37,33 @@ if uploaded_file is not None:
     
     st.info("🔄 Sedang menganalisis karakteristik citra medis...")
     
-    # 4. Prapemrosesan Gambar Manual
+    # 4. Pra-pemrosesan Gambar Menyesuaikan Dimensi TensorFlow
     img_resized = image.resize((224, 224))
     img_array = tf.keras.utils.img_to_array(img_resized)
-    img_array = (img_array / 127.5) - 1.0
-    img_array = np.expand_dims(img_array, axis=0)
+    img_array = np.expand_dims(img_array, axis=0) # Hasil: (1, 224, 224, 3)
     
-        # 5. Eksekusi Prediksi Langsung & Normalisasi Softmax Mandiri
+    # 5. Eksekusi Prediksi Asli dari Model
     predictions = model.predict(img_array)
-    raw_scores = predictions.flatten() # Memaksa hasil prediksi menjadi array 1 dimensi datar
+    raw_scores = predictions.flatten()
     
-    # Fungsi Softmax manual yang sangat aman dari error matematika
+    # Perhitungan Softmax untuk mengubah output menjadi persentase probabilitas (0% - 100%)
     exp_scores = np.exp(raw_scores - np.max(raw_scores))
     probabilities = exp_scores / np.sum(exp_scores)
     
     highest_class_idx = np.argmax(probabilities)
     result_disease = CLASS_NAMES[highest_class_idx]
     confidence_pct = 100 * probabilities[highest_class_idx]
-
     
     # 6. Menampilkan Hasil Utama Analisis AI
     st.success(f"**Hasil Diagnosis AI:** Terdeteksi indikasi klinis **{result_disease}**")
     st.metric(label="Tingkat Keyakinan Model (Confidence Score)", value=f"{confidence_pct:.2f}%")
     
-    # 7. Penerapan Rekomendasi Medis Otomatis
+    # 7. Rekomendasi Medis Otomatis
     st.subheader("🤖 Rekomendasi Medis Otomatis (Asisten AI Terintegrasi)")
     st.write(f"Berikut adalah deskripsi analisis mengenai indikasi awal *{result_disease}*:")
     
     if result_disease == 'Cataracts':
-        st.warning("⚠️ **Rekomendasi Klinis:** Kondisi ini menunjukkan adanya kekeruhan pada lensa mata. Disarankan untuk menjadwalkan pemeriksaan slit-lamp dengan dokter spesialis mata (Oftamalolog) guna mengevaluasi tingkat ketebalan katarak dan opsi tindakan bedah rawat jalan.")
+        st.warning("⚠️ **Rekomendasi Klinis:** Kondisi ini menunjukkan adanya kekeruhan pada lensa mata. Disarankan untuk menjadwalkan pemeriksaan slit-lamp dengan dokter spesialis mata (Oftalmolog) guna mengevaluasi tingkat ketebalan katarak dan opsi tindakan bedah rawat jalan.")
     elif result_disease == 'Glaucoma':
         st.warning("⚠️ **Rekomendasi Klinis:** Indikasi kerusakan saraf optik akibat tekanan intraokular yang tinggi. Memerlukan penanganan segera melalui tes tonometri dan lapang pandang untuk mencegah penurunan penglihatan lebih lanjut.")
     else:
