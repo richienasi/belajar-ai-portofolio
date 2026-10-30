@@ -65,10 +65,20 @@ if uploaded_file is not None:
     img_array = (img_array / 127.5) - 1.0
     img_array = np.expand_dims(img_array, axis=0)  # Menambah dimensi batch menjadi (1, 224, 224, 3)
     
-    # 5. Eksekusi Prediksi Langsung oleh Model AI
+        # 5. Eksekusi Prediksi Langsung oleh Model AI
     predictions = model.predict(img_array)
     highest_class_idx = np.argmax(predictions[0])
     result_disease = CLASS_NAMES[highest_class_idx]
+    
+    # Perbaikan Kalkulasi Probabilitas Cerdas (Mencegah Nilai nan%)
+    raw_scores = predictions[0]
+    # Kurangi dengan nilai maksimum untuk stabilitas numerik matematika
+    shifted_scores = raw_scores - np.max(raw_scores)
+    exp_scores = np.exp(shifted_scores)
+    probabilities = exp_scores / np.sum(exp_scores)
+    
+    confidence_pct = 100 * probabilities[highest_class_idx]
+
     
     # Hitung nilai persentase keyakinan model secara manual dan aman
     exp_preds = np.exp(predictions[0] - np.max(predictions[0]))
