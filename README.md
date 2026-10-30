@@ -33,5 +33,32 @@ Aplikasi web berbasis Artificial Intelligence (AI) dan Machine Learning untuk me
 ├── Untitled0.ipynb             # Notebook eksperimen, pemrosesan data, & pelatihan model
 ├── requirements.txt            # Daftar pustaka/dependensi Python
 └── README.md                   # Dokumentasi proyek
+🚀 Cara Menjalankan Secara Lokal
+Clone Repositori
+
+Bash
+
+
+git clone [https://github.com/richienasi/belajar-ai-portofolio.git](https://github.com/richienasi/belajar-ai-portofolio.git)
+cd belajar-ai-portofolio
+Buat Virtual Environment (Opsional)
+
+Bash
+
+
+python -m venv venv
+venv\Scripts\activate     # Untuk Windows
+Install Dependensi
+
+Bash
+
+
+pip install -r requirements.txt
+Jalankan Aplikasi Streamlit
+
+Bash
+
+
+streamlit run app.py
 ⚠️ Disclaimer Medis
 Aplikasi ini dibangun untuk tujuan edukasi, riset, dan eksperimen portofolio pengembangan model AI. Hasil analisis dari aplikasi ini bukanlah diagnosis medis resmi dan tidak menggantikan pemeriksaan profesional oleh dokter spesialis mata (oftalmologis).
